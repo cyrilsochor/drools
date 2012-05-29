@@ -87,7 +87,7 @@ public class AccumulateNode extends BetaNode {
         this.tupleMemoryEnabled = context.isTupleMemoryEnabled();
     }
 
-    public void readExternal( ObjectInput in ) throws IOException,
+    public synchronized void readExternal( ObjectInput in ) throws IOException,
                                               ClassNotFoundException {
         super.readExternal( in );
         unwrapRightObject = in.readBoolean();
@@ -96,7 +96,7 @@ public class AccumulateNode extends BetaNode {
         resultBinder = (BetaConstraints) in.readObject();
     }
 
-    public void writeExternal( ObjectOutput out ) throws IOException {
+    public synchronized void writeExternal( ObjectOutput out ) throws IOException {
         super.writeExternal( out );
         out.writeBoolean( unwrapRightObject );
         out.writeObject( accumulate );
@@ -122,7 +122,7 @@ public class AccumulateNode extends BetaNode {
      *
      *   Object result = this.accumulator.accumulate( ... );
      */
-    public void assertLeftTuple( final LeftTuple leftTuple,
+    public synchronized void assertLeftTuple( final LeftTuple leftTuple,
                                  final PropagationContext context,
                                  final InternalWorkingMemory workingMemory ) {
 
@@ -198,7 +198,7 @@ public class AccumulateNode extends BetaNode {
      * As the accumulate node will always generate a resulting tuple,
      * we must always destroy it
      */
-    public void retractLeftTuple( final LeftTuple leftTuple,
+    public synchronized void retractLeftTuple( final LeftTuple leftTuple,
                                   final PropagationContext context,
                                   final InternalWorkingMemory workingMemory ) {
         final AccumulateMemory memory = (AccumulateMemory) workingMemory.getNodeMemory( this );
@@ -241,7 +241,7 @@ public class AccumulateNode extends BetaNode {
      *  1. Select all matching tuples from left memory
      *  2. For each matching tuple, call a modify tuple
      */
-    public void assertObject( final InternalFactHandle factHandle,
+    public synchronized void assertObject( final InternalFactHandle factHandle,
                               final PropagationContext context,
                               final InternalWorkingMemory workingMemory ) {
 
@@ -306,7 +306,7 @@ public class AccumulateNode extends BetaNode {
      *  If an object is retract, call modify tuple for each
      *  tuple match.
      */
-    public void retractRightTuple( final RightTuple rightTuple,
+    public synchronized void retractRightTuple( final RightTuple rightTuple,
                                    final PropagationContext context,
                                    final InternalWorkingMemory workingMemory ) {
         final AccumulateMemory memory = (AccumulateMemory) workingMemory.getNodeMemory( this );
@@ -329,7 +329,7 @@ public class AccumulateNode extends BetaNode {
 
     }
 
-    public void modifyLeftTuple( LeftTuple leftTuple,
+    public synchronized void modifyLeftTuple( LeftTuple leftTuple,
                                  PropagationContext context,
                                  InternalWorkingMemory workingMemory ) {
         final AccumulateMemory memory = (AccumulateMemory) workingMemory.getNodeMemory( this );
@@ -450,7 +450,7 @@ public class AccumulateNode extends BetaNode {
         } // else evaluation is already scheduled, so do nothing
     }
 
-    public void modifyRightTuple( RightTuple rightTuple,
+    public synchronized void modifyRightTuple( RightTuple rightTuple,
                                   PropagationContext context,
                                   InternalWorkingMemory workingMemory ) {
         final AccumulateMemory memory = (AccumulateMemory) workingMemory.getNodeMemory( this );
@@ -616,7 +616,7 @@ public class AccumulateNode extends BetaNode {
      * @param accresult
      * @param handle
      */
-    public void evaluateResultConstraints( final ActivitySource source,
+    public synchronized void evaluateResultConstraints( final ActivitySource source,
                                             final LeftTuple leftTuple,
                                             final PropagationContext context,
                                             final InternalWorkingMemory workingMemory,
@@ -748,7 +748,7 @@ public class AccumulateNode extends BetaNode {
         return handle;
     }
 
-    public void updateSink( final LeftTupleSink sink,
+    public synchronized void updateSink( final LeftTupleSink sink,
                             final PropagationContext context,
                             final InternalWorkingMemory workingMemory ) {
         final AccumulateMemory memory = (AccumulateMemory) workingMemory.getNodeMemory( this );
@@ -775,7 +775,7 @@ public class AccumulateNode extends BetaNode {
         }
     }
 
-    protected void doRemove( final InternalWorkingMemory workingMemory,
+    protected synchronized void doRemove( final InternalWorkingMemory workingMemory,
                              final AccumulateMemory memory ) {        
 //        Iterator it = memory.betaMemory.getCreatedHandles().iterator();
 //        for ( ObjectEntry entry = (ObjectEntry) it.next(); entry != null; entry = (ObjectEntry) it.next() ) {
@@ -788,14 +788,14 @@ public class AccumulateNode extends BetaNode {
     /* (non-Javadoc)
      * @see org.drools.reteoo.BaseNode#hashCode()
      */
-    public int hashCode() {
+    public synchronized int hashCode() {
         return this.leftInput.hashCode() ^ this.rightInput.hashCode() ^ this.accumulate.hashCode() ^ this.resultBinder.hashCode() ^ ArrayUtils.hashCode( this.resultConstraints );
     }
 
     /* (non-Javadoc)
      * @see java.lang.Object#equals(java.lang.Object)
      */
-    public boolean equals( final Object object ) {
+    public synchronized boolean equals( final Object object ) {
         if ( this == object ) {
             return true;
         }
@@ -817,7 +817,7 @@ public class AccumulateNode extends BetaNode {
     /**
      * Creates a BetaMemory for the BetaNode's memory.
      */
-    public Memory createMemory( final RuleBaseConfiguration config ) {
+    public synchronized Memory createMemory( final RuleBaseConfiguration config ) {
         AccumulateMemory memory = new AccumulateMemory();
         memory.betaMemory = this.constraints.createBetaMemory( config,
                                                                NodeTypeEnums.AccumulateNode );
@@ -830,11 +830,11 @@ public class AccumulateNode extends BetaNode {
         return memory;
     }
 
-    public short getType() {
+    public synchronized short getType() {
         return NodeTypeEnums.AccumulateNode;
     }
 
-    private void addMatch( final LeftTuple leftTuple,
+    private synchronized void addMatch( final LeftTuple leftTuple,
                            final RightTuple rightTuple,
                            final LeftTuple currentLeftChild,
                            final LeftTuple currentRightChild,
@@ -994,7 +994,7 @@ public class AccumulateNode extends BetaNode {
         }
     }
 
-    protected LeftTuple[] splitList( final LeftTuple parent,
+    protected synchronized LeftTuple[] splitList( final LeftTuple parent,
                                      final AccumulateContext accctx,
                                      final boolean isUpdatingSink ) {
         LeftTuple[] matchings = new LeftTuple[2];
@@ -1121,25 +1121,25 @@ public class AccumulateNode extends BetaNode {
 
     }
     
-    public LeftTuple createLeftTuple(InternalFactHandle factHandle,
+    public synchronized LeftTuple createLeftTuple(InternalFactHandle factHandle,
                                      LeftTupleSink sink,
                                      boolean leftTupleMemoryEnabled) {
         return new FromNodeLeftTuple(factHandle, sink, leftTupleMemoryEnabled );
     }    
     
-    public LeftTuple createLeftTuple(LeftTuple leftTuple,
+    public synchronized LeftTuple createLeftTuple(LeftTuple leftTuple,
                                      LeftTupleSink sink,
                                      boolean leftTupleMemoryEnabled) {
         return new FromNodeLeftTuple(leftTuple,sink, leftTupleMemoryEnabled );
     }
 
-    public LeftTuple createLeftTuple(LeftTuple leftTuple,
+    public synchronized LeftTuple createLeftTuple(LeftTuple leftTuple,
                                      RightTuple rightTuple,
                                      LeftTupleSink sink) {
         return new FromNodeLeftTuple(leftTuple, rightTuple, sink );
     }   
     
-    public LeftTuple createLeftTuple(LeftTuple leftTuple,
+    public synchronized LeftTuple createLeftTuple(LeftTuple leftTuple,
                                      RightTuple rightTuple,
                                      LeftTuple currentLeftChild,
                                      LeftTuple currentRightChild,
