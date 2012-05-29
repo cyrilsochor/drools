@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.PriorityQueue;
 
 import org.drools.common.EventFactHandle;
@@ -121,6 +122,7 @@ public class SlidingTimeWindow
                                     final Object context,
                                     final RightTuple rightTuple,
                                     final InternalWorkingMemory workingMemory) {
+    	System.out.println(new Date() + " / " + new Date(workingMemory.getSessionClock().getCurrentTime()) + "SlidingTimeWindow.assertRightTuple     : " + rightTuple.getFactHandle().getObject());
         SlidingTimeWindowContext queue = (SlidingTimeWindowContext) context;
         if( pctx.getReaderContext() != null || !isExpired( workingMemory.getTimerService().getCurrentTime(), rightTuple ) ) {
             queue.queue.add( rightTuple );
@@ -144,6 +146,7 @@ public class SlidingTimeWindow
     public void retractRightTuple(final Object context,
                                   final RightTuple rightTuple,
                                   final InternalWorkingMemory workingMemory) {
+    	System.out.println(new Date() + " / " + new Date(workingMemory.getSessionClock().getCurrentTime()) + "SlidingTimeWindow.retractRightTuple    : " + rightTuple.getFactHandle().getObject());
         SlidingTimeWindowContext queue = (SlidingTimeWindowContext) context;
         // it may be a call back to expire the tuple that is already being expired
         if ( queue.expiringTuple != rightTuple ) {
